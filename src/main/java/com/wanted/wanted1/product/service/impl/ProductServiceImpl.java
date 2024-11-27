@@ -5,6 +5,7 @@ import com.wanted.wanted1.product.model.ProductEntity;
 import com.wanted.wanted1.product.model.Status;
 import com.wanted.wanted1.product.repository.ProductRepository;
 import com.wanted.wanted1.product.service.ProductService;
+import com.wanted.wanted1.users.model.UserDetail;
 import com.wanted.wanted1.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,13 +34,18 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity<List<ProductEntity>> findByUser(Long id) {
-        return ResponseEntity.ok(productRepository.findBySeller(id));
+    public ResponseEntity<List<ProductEntity>> findByUser(UserDetail userDetail, Long id) {
+        return Optional.ofNullable(userDetail)
+                .filter(detail -> !detail.getAuthorities().isEmpty())
+                .map(detail -> ResponseEntity.ok(productRepository.findBySeller(id)))
+                .orElse(ResponseEntity.status(HttpStatus.FORBIDDEN).body(null));
     }
 
     @Override
-    public ResponseEntity<ProductEntity> save(ProductDto product) {
-        return userRepository.findById(product.getSeller())
+    public ResponseEntity<ProductEntity> save(UserDetail userDetail, ProductDto product) {
+        return Optional.ofNullable(userDetail)
+                .filter(detail -> !detail.getAuthorities().isEmpty())
+                .flatMap(user -> userRepository.findById(product.getSeller()))
                 .map(user -> {
                     ProductEntity productEntity = ProductEntity.builder()
                             .name(product.getName())
@@ -52,8 +59,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity<ProductEntity> update(ProductDto product) {
-        return productRepository.findById(product.getId())
+    public ResponseEntity<ProductEntity> update(UserDetail userDetail, ProductDto product) {
+        if (userDetail == null || userDetail.getAuthorities().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        return userRepository.findById(product.getSeller())
+                .filter(user -> user.equals(userDetail.getUser()))
+                .flatMap(user -> productRepository.findById(product.getId()))
                 .map(existingProduct -> {
                     existingProduct.setStatus(Status.COMPLETED);
                     ProductEntity updatedProduct = productRepository.save(existingProduct);

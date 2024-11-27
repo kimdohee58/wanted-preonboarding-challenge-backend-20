@@ -3,6 +3,7 @@ package com.wanted.wanted1.product.controller;
 import com.wanted.wanted1.product.model.ProductDto;
 import com.wanted.wanted1.product.model.ProductEntity;
 import com.wanted.wanted1.product.service.ProductService;
+import com.wanted.wanted1.users.model.UserDetail;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,7 +45,6 @@ public class ProductController {
         return productService.findById(id);
     }
 
-    // todo 내가 등록한 상품 리스트 보여주기?
     @GetMapping("/findByUser")
     @Operation(summary = "내가 등록한 제품 목록", description = "본인이 등록한 모든 제품 목록 확인 가능")
     @ApiResponses({
@@ -52,8 +53,8 @@ public class ProductController {
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @Parameter(name = "회원 id", description = "제품에 등록된 판매자 id", example = "2")
-    public ResponseEntity<List<ProductEntity>> findByUser(@RequestParam Long id) {
-        return productService.findByUser(id);
+    public ResponseEntity<List<ProductEntity>> findByUser(@AuthenticationPrincipal UserDetail userDetail, @RequestParam Long id) {
+        return productService.findByUser(userDetail, id);
     }
 
     @PostMapping
@@ -78,12 +79,12 @@ public class ProductController {
                             """
             )
     )
-    public ResponseEntity<ProductEntity> save(@RequestBody ProductDto product) {
-        return productService.save(product);
+    public ResponseEntity<ProductEntity> save(@AuthenticationPrincipal UserDetail userDetail, @RequestBody ProductDto product) {
+        return productService.save(userDetail, product);
     }
 
     @PatchMapping
-    @Operation(summary = "제품 상태 수정", description = "등록된 제품의 상태를 수정할 때 호출하는 메서드")
+    @Operation(summary = "제품 상태 수정", description = "등록된 제품의 상태를 완료로 변경할 때 호출하는 메서드")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "주문 목록 조회 성공"),
             @ApiResponse(responseCode = "404", description = "사용자 찾을 수 없음"),
@@ -103,7 +104,7 @@ public class ProductController {
                             """
             )
     )
-    public ResponseEntity<ProductEntity> update(@RequestBody ProductDto product) {
-        return productService.update(product);
+    public ResponseEntity<ProductEntity> update(@AuthenticationPrincipal UserDetail userDetail, @RequestBody ProductDto product) {
+        return productService.update(userDetail, product);
     }
 }

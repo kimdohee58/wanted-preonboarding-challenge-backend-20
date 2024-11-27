@@ -18,7 +18,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .map(user -> ResponseEntity.ok("Email is already in use"))
+                .map(user -> ResponseEntity.badRequest().body("Email is already in use"))
                 .orElseGet(() -> ResponseEntity.ok("Email is available"));
     }
 
