@@ -7,6 +7,7 @@ import com.wanted.wanted1.order.service.OrderService;
 import com.wanted.wanted1.product.model.ProductEntity;
 import com.wanted.wanted1.product.model.Status;
 import com.wanted.wanted1.product.repository.ProductRepository;
+import com.wanted.wanted1.users.model.UserDetail;
 import com.wanted.wanted1.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,31 +25,41 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
 
     @Override
-    public ResponseEntity<List<OrderEntity>> findByUser(Long id) {
+    public ResponseEntity<List<OrderEntity>> findByUser(UserDetail userDetail, Long id) {
         return ResponseEntity.ok(orderRepository.findAllBySellerOrBuyer(id));
     }
 
     @Override
-    public ResponseEntity<OrderEntity> findById(Long id) {
-        return ResponseEntity.ok(orderRepository.findById(id).orElse(null));
+    public ResponseEntity<OrderEntity> findById(UserDetail userDetail, Long id) {
+        return isUserAuthorized(userDetail)
+                .map(authorized -> orderRepository.findById(id)
+                        .map(ResponseEntity::ok)
+                        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build()))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.FORBIDDEN).build());
     }
 
     @Override
-    public ResponseEntity<OrderEntity> save(OrderDto order) {
-        OrderEntity orderEntity = orderRepository.save(OrderEntity.builder()
-                .orderNumber(order.getOrderNo())
-                .product(productRepository.findById(order.getId()).get())
-                .seller(userRepository.findById(order.getSellerId()).get())
-                .buyer(userRepository.findById(order.getBuyerId()).get())
-                .build());
+    public ResponseEntity<OrderEntity> save(UserDetail userDetail, OrderDto order) {
+        return isUserAuthorized(userDetail)
+                .map(authorized -> {
+                    OrderEntity orderEntity = orderRepository.save(OrderEntity.builder()
+                            .orderNumber(order.getOrderNo())
+                            .product(productRepository.findById(order.getProductId()).orElseThrow())
+                            .seller(userRepository.findById(order.getSellerId()).orElseThrow())
+                            .buyer(userRepository.findById(order.getBuyerId()).orElseThrow())
+                            .build());
 
-        if (orderEntity != null) {
-            ProductEntity productEntity = productRepository.findById(order.getProductId()).get();
-            productEntity.setStatus(Status.RESERVED);
-            productRepository.save(productEntity);
-            return ResponseEntity.ok(orderEntity);
-        } else {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+                    ProductEntity productEntity = productRepository.findById(order.getProductId()).orElseThrow();
+                    productEntity.setStatus(Status.RESERVED);
+                    productRepository.save(productEntity);
+
+                    return ResponseEntity.ok(orderEntity);
+                })
+                .orElse(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
+    }
+
+    private Optional<UserDetail> isUserAuthorized(UserDetail userDetail) {
+        return Optional.ofNullable(userDetail)
+                .filter(detail -> !detail.getAuthorities().isEmpty());
     }
 }

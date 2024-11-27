@@ -3,6 +3,7 @@ package com.wanted.wanted1.order.controller;
 import com.wanted.wanted1.order.model.OrderDto;
 import com.wanted.wanted1.order.model.OrderEntity;
 import com.wanted.wanted1.order.service.OrderService;
+import com.wanted.wanted1.users.model.UserDetail;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,8 +32,8 @@ public class OrderController {
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @Parameter(name = "id", description = "조회할 사용자의 id", example = "2")
-    public ResponseEntity<List<OrderEntity>> findByUser(@RequestParam Long id) {
-        return orderService.findByUser(id);
+    public ResponseEntity<List<OrderEntity>> findByUser(@AuthenticationPrincipal UserDetail userDetail, @RequestParam Long id) {
+        return orderService.findByUser(userDetail, id);
     }
 
     @GetMapping("/{id}")
@@ -42,8 +44,8 @@ public class OrderController {
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @Parameter(name = "id", description = "상세보기할 주문 id", example = "2")
-    public ResponseEntity<OrderEntity> findById(@PathVariable Long id) {
-        return orderService.findById(id);
+    public ResponseEntity<OrderEntity> findById(@AuthenticationPrincipal UserDetail userDetail, @PathVariable Long id) {
+        return orderService.findById(userDetail, id);
     }
 
     @PostMapping
@@ -68,7 +70,7 @@ public class OrderController {
                             }
                             """
             ))
-    public ResponseEntity<OrderEntity> save(@RequestBody OrderDto order) {
-        return orderService.save(order);
+    public ResponseEntity<OrderEntity> save(@AuthenticationPrincipal UserDetail userDetail, @RequestBody OrderDto order) {
+        return orderService.save(userDetail, order);
     }
 }
