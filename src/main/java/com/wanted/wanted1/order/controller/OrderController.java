@@ -31,9 +31,8 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "사용자 찾을 수 없음"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    @Parameter(name = "id", description = "조회할 사용자의 id", example = "2")
-    public ResponseEntity<List<OrderEntity>> findByUser(@AuthenticationPrincipal UserDetail userDetail, @RequestParam Long id) {
-        return orderService.findByUser(userDetail, id);
+    public ResponseEntity<List<OrderEntity>> findByUser(@AuthenticationPrincipal UserDetail userDetail) {
+        return orderService.findByUser(userDetail);
     }
 
     @GetMapping("/{id}")

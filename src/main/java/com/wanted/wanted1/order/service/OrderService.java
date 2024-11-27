@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface OrderService {
 
-    ResponseEntity<List<OrderEntity>> findByUser(UserDetail userDetail, Long id);
+    ResponseEntity<List<OrderEntity>> findByUser(UserDetail userDetail);
 
     ResponseEntity<OrderEntity> findById(UserDetail userDetail, Long id);
 

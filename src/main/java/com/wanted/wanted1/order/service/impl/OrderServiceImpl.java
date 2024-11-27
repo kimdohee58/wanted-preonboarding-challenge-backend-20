@@ -25,8 +25,10 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
 
     @Override
-    public ResponseEntity<List<OrderEntity>> findByUser(UserDetail userDetail, Long id) {
-        return ResponseEntity.ok(orderRepository.findAllBySellerOrBuyer(id));
+    public ResponseEntity<List<OrderEntity>> findByUser(UserDetail userDetail) {
+        return isUserAuthorized(userDetail)
+                .map(authorized -> ResponseEntity.ok(orderRepository.findAllBySellerOrBuyer(userDetail.getUser().getId())))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.FORBIDDEN).build());
     }
 
     @Override
