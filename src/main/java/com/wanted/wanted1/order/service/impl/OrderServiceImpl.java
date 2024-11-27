@@ -8,6 +8,7 @@ import com.wanted.wanted1.product.model.ProductEntity;
 import com.wanted.wanted1.product.model.Status;
 import com.wanted.wanted1.product.repository.ProductRepository;
 import com.wanted.wanted1.users.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,10 +16,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
-    private OrderRepository orderRepository;
-    private ProductRepository productRepository;
-    private UserRepository userRepository;
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
     @Override
     public ResponseEntity<List<OrderEntity>> findByUser(Long id) {
@@ -32,7 +34,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public ResponseEntity<OrderEntity> save(OrderDto order) {
-        // TODO : product status 예약중으로 변경
         OrderEntity orderEntity = orderRepository.save(OrderEntity.builder()
                 .orderNumber(order.getOrderNo())
                 .product(productRepository.findById(order.getId()).get())
@@ -49,6 +50,4 @@ public class OrderServiceImpl implements OrderService {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
-
-
 }

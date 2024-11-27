@@ -5,6 +5,8 @@ import com.wanted.wanted1.product.model.ProductEntity;
 import com.wanted.wanted1.product.model.Status;
 import com.wanted.wanted1.product.repository.ProductRepository;
 import com.wanted.wanted1.product.service.ProductService;
+import com.wanted.wanted1.users.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,8 +14,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
     @Override
     public ResponseEntity<List<ProductEntity>> findAll() {
@@ -22,7 +26,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity<ProductEntity> findById(Long id) {
-        return ResponseEntity.ok(productRepository.findById(id).get());
+        return productRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @Override
@@ -32,21 +38,26 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity<ProductEntity> save(ProductDto product) {
-        return ResponseEntity.ok(productRepository.save(ProductEntity.builder()
-                        .name(product.getName())
-                        .price(product.getPrice())
-                        .seller(product.getSeller())
-                .build()));
+        return userRepository.findById(product.getSeller())
+                .map(user -> {
+                    ProductEntity productEntity = ProductEntity.builder()
+                            .name(product.getName())
+                            .price(product.getPrice())
+                            .seller(user)
+                            .build();
+                    ProductEntity savedProduct = productRepository.save(productEntity);
+                    return ResponseEntity.ok(savedProduct);
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @Override
     public ResponseEntity<ProductEntity> update(ProductDto product) {
         return productRepository.findById(product.getId())
-                .filter(t-> productRepository.existsById(product.getId()))
-                .map(t-> {
-                    ProductEntity productEntity = productRepository.findById(product.getId()).get();
-                    productEntity.setStatus(Status.COMPLETED);
-                    return new ResponseEntity<>(productEntity, HttpStatus.OK);
+                .map(existingProduct -> {
+                    existingProduct.setStatus(Status.COMPLETED);
+                    ProductEntity updatedProduct = productRepository.save(existingProduct);
+                    return ResponseEntity.ok(updatedProduct);
                 })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }

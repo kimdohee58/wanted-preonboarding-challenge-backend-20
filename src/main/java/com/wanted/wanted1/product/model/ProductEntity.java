@@ -1,9 +1,9 @@
 package com.wanted.wanted1.product.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import com.wanted.wanted1.users.model.UserEntity;
+import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicInsert;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import java.math.BigDecimal;
@@ -16,12 +16,17 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class ProductEntity {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
     private BigDecimal price;
-    private Status status;
 
-    private Long seller;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Status status = Status.ON_SALE;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id", nullable = false)
+    private UserEntity seller;
 }

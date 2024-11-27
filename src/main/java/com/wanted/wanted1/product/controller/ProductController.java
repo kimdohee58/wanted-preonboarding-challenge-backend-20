@@ -45,7 +45,14 @@ public class ProductController {
 
     // todo 내가 등록한 상품 리스트 보여주기?
     @GetMapping("/findByUser")
-    public ResponseEntity<List<ProductEntity>> findByUser(Long id) {
+    @Operation(summary = "내가 등록한 제품 목록", description = "본인이 등록한 모든 제품 목록 확인 가능")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "제품 목록 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "제품 목록 찾을 수 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @Parameter(name = "회원 id", description = "제품에 등록된 판매자 id", example = "2")
+    public ResponseEntity<List<ProductEntity>> findByUser(@RequestParam Long id) {
         return productService.findByUser(id);
     }
 
@@ -56,15 +63,22 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "찾을 수 없음"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    @Parameter(examples = {
-            @ExampleObject(name = "exampleProductDto", value = """ 
-                        { 
-                            "name" : "제품 이름",
-                            "price" : "제품 가격", 
-                            "seller" : "판매자 email"
-                        } 
-                    """)})
-    public ResponseEntity<ProductEntity> save(ProductDto product) {
+    @Parameter(
+            name = "product",
+            description = "등록할 제품 정보",
+            required = true,
+            examples = @ExampleObject(
+                    name = "exampleProductDto",
+                    value = """
+                            {
+                                "name": "제품 이름",
+                                "price": "제품 가격",
+                                "seller": "판매자 id"
+                            }
+                            """
+            )
+    )
+    public ResponseEntity<ProductEntity> save(@RequestBody ProductDto product) {
         return productService.save(product);
     }
 
@@ -75,14 +89,21 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "사용자 찾을 수 없음"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    @Parameter(examples = {
-            @ExampleObject(name = "exampleProductDto", value = """ 
-                        { 
-                            "id" : "제품 id",
-                            "seller" : "판매자 email"
-                        } 
-                    """)})
-    public ResponseEntity<ProductEntity> update(ProductDto product) {
+    @Parameter(
+            name = "product",
+            description = "수정할 제품 정보",
+            required = true,
+            examples = @ExampleObject(
+                    name = "exampleProductDto",
+                    value = """
+                            {
+                                "id": "제품 id",
+                                "seller": "판매자 id"
+                            }
+                            """
+            )
+    )
+    public ResponseEntity<ProductEntity> update(@RequestBody ProductDto product) {
         return productService.update(product);
     }
 }

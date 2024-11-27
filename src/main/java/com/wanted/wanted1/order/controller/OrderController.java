@@ -29,8 +29,8 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "사용자 찾을 수 없음"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    @Parameter(name = "로그인한 사용자 id", description = "조회할 사용자의 id", example = "2")
-    public ResponseEntity<List<OrderEntity>> findByUser(Long id) {
+    @Parameter(name = "id", description = "조회할 사용자의 id", example = "2")
+    public ResponseEntity<List<OrderEntity>> findByUser(@RequestParam Long id) {
         return orderService.findByUser(id);
     }
 
@@ -41,7 +41,7 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "주문 찾을 수 없음"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    @Parameter(name = "주문 id", description = "상세보기할 주문 id", example = "2")
+    @Parameter(name = "id", description = "상세보기할 주문 id", example = "2")
     public ResponseEntity<OrderEntity> findById(@PathVariable Long id) {
         return orderService.findById(id);
     }
@@ -49,19 +49,25 @@ public class OrderController {
     @PostMapping
     @Operation(summary = "구매하기 버튼을 통해 거래 시작", description = "구매자가 구매하기 버튼 눌렀을 때 호출되는 메서드")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "주문 목록 조회 성공"),
+            @ApiResponse(responseCode = "200", description = "주문 생성 성공"),
             @ApiResponse(responseCode = "404", description = "사용자 찾을 수 없음"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    @Parameter(examples = {
-            @ExampleObject(name = "exampleOrderModel", value = """ 
-                        { 
-                            "orderNo" : "주문 번호",
-                            "productId" : "제품 id", 
-                            "sellerId" : "판매자 id", 
-                            "buyerId" : "구매자 id"
-                        } 
-                    """)})
+    @Parameter(
+            name = "order",
+            description = "등록할 제품 정보",
+            required = true,
+            examples = @ExampleObject(
+                    name = "exampleOrderDto",
+                    value = """
+                            {
+                                "orderNo": "주문 번호",
+                                "productId": "제품 id",
+                                "sellerId": "판매자 id",
+                                "buyerId": "구매자 id"
+                            }
+                            """
+            ))
     public ResponseEntity<OrderEntity> save(@RequestBody OrderDto order) {
         return orderService.save(order);
     }

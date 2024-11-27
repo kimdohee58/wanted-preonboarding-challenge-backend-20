@@ -2,6 +2,8 @@ package com.wanted.wanted1.product.model;
 
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @Builder
@@ -10,7 +12,7 @@ import lombok.*;
 public class ProductDto {
     private Long id;
     private String name;
-    private int price;
+    private BigDecimal price;
     private Status status;
     private Long seller;
 }
